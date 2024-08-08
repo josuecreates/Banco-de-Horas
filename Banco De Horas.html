@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Controle de Horas</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background-image: url('https://conteudo.zenklub.com.br/blog/wp-content/uploads/2023/11/iStock-1188384237.jpg');
+            background-size: cover;
+            background-position: center;
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            background: rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 600px;
+            box-sizing: border-box;
+        }
+
+        .main-container {
+            max-width: 90%;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        h2, h3 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        input[type="text"], input[type="password"], input[type="email"], input[type="time"], select, button {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 5px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+
+        input[type="text"], input[type="password"], input[type="email"], input[type="time"], select {
+            background: #fff;
+            color: #000;
+        }
+
+        button {
+            background: #28a745;
+            color: #fff;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: #218838;
+        }
+
+        .link {
+            color: #ffc107;
+            cursor: pointer;
+            text-decoration: underline;
+            display: block;
+            text-align: center;
+            margin: 10px 0;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            margin-top: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background-color: #fff;
+            color: #000;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #333;
+            color: #fff;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        .chart-container {
+            margin-top: 20px;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .filter-group input, .filter-group button {
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .editable, .delete, .payable, .use-hours {
+            cursor: pointer;
+        }
+
+        .paid {
+            background-color: #d4edda; /* Verde claro */
+        }
+
+        .not-paid {
+            background-color: #f8d7da; /* Vermelho claro */
+        }
+
+        .editable:hover, .delete:hover, .payable:hover, .use-hours:hover {
+            text-decoration: underline;
+        }
+
+        #errorMessage {
+            color: red;
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .negative {
+            color: red;
+        }
+
+        .positive {
+            color: green;
+        }
+    </style>
+</head>
+<body>
+    <!-- Login -->
+    <div id="loginContainer" class="container">
+        <h2>Login</h2>
+        <input type="text" id="loginUser" placeholder="Usuário">
+        <input type="password" id="loginPassword" placeholder="Senha">
+        <button onclick="login()">Entrar</button>
+        <div>
+            <span class="link" onclick="showRegister()">Registrar</span>
+            <span class="link" onclick="showForgotPassword()">Esqueci a Senha</span>
+        </div>
+        <div id="errorMessage" class="hidden"></div>
+    </div>
+
+    <!-- Registro -->
+    <div id="registerContainer" class="container hidden">
+        <h2>Registrar</h2>
+        <input type="text" id="registerUser" placeholder="Usuário">
+        <input type="password" id="registerPassword" placeholder="Senha">
+        <button onclick="register()">Registrar</button>
+        <div>
+            <span class="link" onclick="showLogin()">Voltar</span>
+        </div>
+        <div id="errorMessage" class="hidden"></div>
+    </div>
+
+    <!-- Esqueci a Senha -->
+    <div id="forgotPasswordContainer" class="container hidden">
+        <h2>Esqueci a Senha</h2>
+        <input type="email" id="forgotEmail" placeholder="E-mail">
+        <button onclick="forgotPassword()">Enviar E-mail</button>
+        <div>
+            <span class="link" onclick="showLogin()">Voltar</span>
+        </div>
+    </div>
+
+    <!-- Tela Principal -->
+    <div id="mainContainer" class="container main-container hidden">
+        <h2 id="welcomeMessage">Bem-vindo(a)!</h2>
+        <div class="form-group">
+            <label for="nome">Nome:</label>
+            <input type="text" id="nome">
+        </div>
+        <div class="form-group">
+            <label for="diaSemana">Dia da Semana:</label>
+            <select id="diaSemana">
+                <option value="segunda">Segunda-feira</option>
+                <option value="terca">Terça-feira</option>
+                <option value="quarta">Quarta-feira</option>
+                <option value="quinta">Quinta-feira</option>
+                <option value="sexta">Sexta-feira</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="entrada">Hora de Entrada:</label>
+            <input type="time" id="entrada" value="08:00">
+        </div>
+        <div class="form-group">
+            <label for="saida">Hora de Saída:</label>
+            <input type="time" id="saida" value="14:00">
+        </div>
+        <div class="form-group">
+            <button id="adicionarRegistro" onclick="adicionarRegistro()">Adicionar</button>
+        </div>
+
+        <div class="form-group">
+            <h3>Filtrar Histórico</h3>
+            <div class="filter-group">
+                <input type="text" id="searchNome" placeholder="Procurar por Nome">
+                <input type="text" id="searchDiaSemana" placeholder="Procurar por Dia da Semana">
+                <input type="text" id="searchMes" placeholder="Procurar por Mês (Ex: 01 para Janeiro)">
+            </div>
+            <div class="filter-group">
+                <button onclick="filtrarHistorico()">Filtrar</button>
+                <button onclick="limparFiltros()">Limpar Filtros</button>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <h2>Histórico de Registros</h2>
+            <table id="historicoTabela">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Dia da Semana</th>
+                        <th>Hora de Entrada</th>
+                        <th>Hora de Saída</th>
+                        <th>Horas Trabalhadas</th>
+                        <th>Saldo de Horas</th>
+                        <th>Data</th>
+                        <th>Status</th>
+                        <th>Ação</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="chart-container">
+            <h2>Horas Trabalhadas</h2>
+            <canvas id="horasChart"></canvas>
+        </div>
+
+        <div class="form-group">
+            <h3>Uso de Horas</h3>
+            <input type="number" id="horasUsar" placeholder="Horas a Usar" step="0.1">
+            <button onclick="usarHoras()">Usar Horas</button>
+        </div>
+
+        <div class="form-group">
+            <button onclick="logout()">Sair</button>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <script>
+        let registros = JSON.parse(localStorage.getItem('registros')) || [];
+        let usuarios = JSON.parse(localStorage.getItem('usuarios')) || [];
+        let editIndex = null;
+        let chartInstance = null;
+
+        function showLogin() {
+            $('#loginContainer').removeClass('hidden');
+            $('#registerContainer').addClass('hidden');
+            $('#forgotPasswordContainer').addClass('hidden');
+            $('#mainContainer').addClass('hidden');
+        }
+
+        function showRegister() {
+            $('#loginContainer').addClass('hidden');
+            $('#registerContainer').removeClass('hidden');
+            $('#forgotPasswordContainer').addClass('hidden');
+            $('#mainContainer').addClass('hidden');
+        }
+
+        function showForgotPassword() {
+            $('#loginContainer').addClass('hidden');
+            $('#registerContainer').addClass('hidden');
+            $('#forgotPasswordContainer').removeClass('hidden');
+            $('#mainContainer').addClass('hidden');
+        }
+
+        function showMainContainer() {
+            $('#loginContainer').addClass('hidden');
+            $('#registerContainer').addClass('hidden');
+            $('#forgotPasswordContainer').addClass('hidden');
+            $('#mainContainer').removeClass('hidden');
+            carregarHistorico();
+            exibirGrafico();
+        }
+
+        function login() {
+            const usuario = $('#loginUser').val();
+            const senha = $('#loginPassword').val();
+            const user = usuarios.find(u => u.nome === usuario && u.senha === senha);
+
+            if (user) {
+                $('#welcomeMessage').text(`Bem-vindo(a), ${usuario}!`);
+                showMainContainer();
+            } else {
+                $('#errorMessage').removeClass('hidden').text('Usuário ou senha inválidos.');
+            }
+        }
+
+        function register() {
+            const usuario = $('#registerUser').val();
+            const senha = $('#registerPassword').val();
+
+            if (usuarios.some(u => u.nome === usuario)) {
+                $('#errorMessage').removeClass('hidden').text('Usuário já existe.');
+                return;
+            }
+
+            usuarios.push({ nome: usuario, senha: senha });
+            localStorage.setItem('usuarios', JSON.stringify(usuarios));
+            showLogin();
+        }
+
+        function forgotPassword() {
+            const email = $('#forgotEmail').val();
+            alert(`Um email de recuperação foi enviado para ${email}.`);
+            showLogin();
+        }
+
+        function adicionarRegistro() {
+            const nome = $('#nome').val();
+            const diaSemana = $('#diaSemana').val();
+            const entrada = $('#entrada').val();
+            const saida = $('#saida').val();
+
+            if (!nome || !entrada || !saida) {
+                alert('Preencha todos os campos.');
+                return;
+            }
+
+            const dataAtual = new Date();
+            const data = dataAtual.toLocaleDateString();
+            const horasTrabalhadas = calcularHorasTrabalhadas(entrada, saida);
+            const saldoHoras = horasTrabalhadas - 6; // Considerando que 6 horas é a carga horária padrão
+
+            const novoRegistro = {
+                nome: nome,
+                diaSemana: diaSemana,
+                entrada: entrada,
+                saida: saida,
+                horasTrabalhadas: horasTrabalhadas,
+                saldoHoras: saldoHoras,
+                data: data,
+                status: saldoHoras >= 0 ? 'Pago' : 'Pendente'
+            };
+
+            registros.push(novoRegistro);
+            localStorage.setItem('registros', JSON.stringify(registros));
+            carregarHistorico();
+            exibirGrafico();
+        }
+
+        function calcularHorasTrabalhadas(entrada, saida) {
+            const [entradaHoras, entradaMinutos] = entrada.split(':').map(Number);
+            const [saidaHoras, saidaMinutos] = saida.split(':').map(Number);
+
+            const entradaEmMinutos = entradaHoras * 60 + entradaMinutos;
+            const saidaEmMinutos = saidaHoras * 60 + saidaMinutos;
+
+            const diferencaMinutos = saidaEmMinutos - entradaEmMinutos;
+            return diferencaMinutos / 60;
+        }
+
+        function carregarHistorico() {
+            const tabelaCorpo = $('#historicoTabela tbody');
+            tabelaCorpo.empty();
+
+            registros.forEach((registro, index) => {
+                const statusClass = registro.saldoHoras < 0 ? 'not-paid' : 'paid';
+
+                tabelaCorpo.append(`
+                    <tr>
+                        <td>${registro.nome}</td>
+                        <td>${registro.diaSemana}</td>
+                        <td>${registro.entrada}</td>
+                        <td>${registro.saida}</td>
+                        <td>${registro.horasTrabalhadas}</td>
+                        <td class="${registro.saldoHoras < 0 ? 'negative' : 'positive'}">${registro.saldoHoras}</td>
+                        <td>${registro.data}</td>
+                        <td class="${statusClass}">${registro.status}</td>
+                        <td>
+                            <span class="editable" onclick="editarRegistro(${index})">Editar</span> |
+                            <span class="delete" onclick="deletarRegistro(${index})">Deletar</span> |
+                            <span class="payable" onclick="marcarComoPago(${index})">Marcar como Pago</span> |
+                            <span class="use-hours" onclick="usarHorasDoRegistro(${index})">Usar Horas</span>
+                        </td>
+                    </tr>
+                `);
+            });
+        }
+
+        function editarRegistro(index) {
+            const registro = registros[index];
+            $('#nome').val(registro.nome);
+            $('#diaSemana').val(registro.diaSemana);
+            $('#entrada').val(registro.entrada);
+            $('#saida').val(registro.saida);
+            editIndex = index;
+        }
+
+        function deletarRegistro(index) {
+            if (confirm('Tem certeza que deseja deletar este registro?')) {
+                registros.splice(index, 1);
+                localStorage.setItem('registros', JSON.stringify(registros));
+                carregarHistorico();
+                exibirGrafico();
+            }
+        }
+
+        function marcarComoPago(index) {
+            registros[index].status = 'Pago';
+            localStorage.setItem('registros', JSON.stringify(registros));
+            carregarHistorico();
+        }
+
+        function filtrarHistorico() {
+            const nomeFiltro = $('#searchNome').val().toLowerCase();
+            const diaSemanaFiltro = $('#searchDiaSemana').val().toLowerCase();
+            const mesFiltro = $('#searchMes').val().toLowerCase();
+
+            const registrosFiltrados = registros.filter(registro => {
+                const nomeMatch = !nomeFiltro || registro.nome.toLowerCase().includes(nomeFiltro);
+                const diaSemanaMatch = !diaSemanaFiltro || registro.diaSemana.toLowerCase().includes(diaSemanaFiltro);
+                const mesMatch = !mesFiltro || registro.data.split('/')[1].toLowerCase().includes(mesFiltro);
+                return nomeMatch && diaSemanaMatch && mesMatch;
+            });
+
+            carregarTabelaFiltrada(registrosFiltrados);
+        }
+
+        function carregarTabelaFiltrada(registrosFiltrados) {
+            const tabelaCorpo = $('#historicoTabela tbody');
+            tabelaCorpo.empty();
+
+            registrosFiltrados.forEach((registro, index) => {
+                const statusClass = registro.saldoHoras < 0 ? 'not-paid' : 'paid';
+
+                tabelaCorpo.append(`
+                    <tr>
+                        <td>${registro.nome}</td>
+                        <td>${registro.diaSemana}</td>
+                        <td>${registro.entrada}</td>
+                        <td>${registro.saida}</td>
+                        <td>${registro.horasTrabalhadas}</td>
+                        <td class="${registro.saldoHoras < 0 ? 'negative' : 'positive'}">${registro.saldoHoras}</td>
+                        <td>${registro.data}</td>
+                        <td class="${statusClass}">${registro.status}</td>
+                        <td>
+                            <span class="editable" onclick="editarRegistro(${index})">Editar</span> |
+                            <span class="delete" onclick="deletarRegistro(${index})">Deletar</span> |
+                            <span class="payable" onclick="marcarComoPago(${index})">Marcar como Pago</span> |
+                            <span class="use-hours" onclick="usarHorasDoRegistro(${index})">Usar Horas</span>
+                        </td>
+                    </tr>
+                `);
+            });
+        }
+
+        function limparFiltros() {
+            $('#searchNome').val('');
+            $('#searchDiaSemana').val('');
+            $('#searchMes').val('');
+            carregarHistorico();
+        }
+
+        function usarHoras() {
+            const horasUsar = parseFloat($('#horasUsar').val());
+
+            if (isNaN(horasUsar) || horasUsar <= 0) {
+                alert('Por favor, insira uma quantidade válida de horas.');
+                return;
+            }
+
+            let horasRestantes = horasUsar;
+
+            for (let i = 0; i < registros.length; i++) {
+                if (registros[i].saldoHoras > 0) {
+                    if (registros[i].saldoHoras >= horasRestantes) {
+                        registros[i].saldoHoras -= horasRestantes;
+                        horasRestantes = 0;
+                    } else {
+                        horasRestantes -= registros[i].saldoHoras;
+                        registros[i].saldoHoras = 0;
+                    }
+                }
+
+                if (horasRestantes === 0) {
+                    break;
+                }
+            }
+
+            if (horasRestantes > 0) {
+                alert('Não há horas suficientes no banco.');
+            }
+
+            localStorage.setItem('registros', JSON.stringify(registros));
+            carregarHistorico();
+        }
+
+        function usarHorasDoRegistro(index) {
+            const horasUsar = parseFloat(prompt('Quantas horas deseja usar?'));
+
+            if (isNaN(horasUsar) || horasUsar <= 0) {
+                alert('Por favor, insira uma quantidade válida de horas.');
+                return;
+            }
+
+            if (registros[index].saldoHoras >= horasUsar) {
+                registros[index].saldoHoras -= horasUsar;
+            } else {
+                alert('Horas insuficientes neste registro.');
+                return;
+            }
+
+            localStorage.setItem('registros', JSON.stringify(registros));
+            carregarHistorico();
+        }
+
+        function exibirGrafico() {
+            const ctx = document.getElementById('horasChart').getContext('2d');
+
+            if (chartInstance) {
+                chartInstance.destroy();
+            }
+
+            const horasTrabalhadasPorDia = registros.reduce((acc, registro) => {
+                acc[registro.diaSemana] = (acc[registro.diaSemana] || 0) + registro.horasTrabalhadas;
+                return acc;
+            }, {});
+
+            chartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(horasTrabalhadasPorDia),
+                    datasets: [{
+                        label: 'Horas Trabalhadas',
+                        data: Object.values(horasTrabalhadasPorDia),
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        function logout() {
+            showLogin();
+        }
+
+        $(document).ready(function() {
+            showLogin();
+        });
+    </script>
+</body>
+</html>
